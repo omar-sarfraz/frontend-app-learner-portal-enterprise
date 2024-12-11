@@ -13,6 +13,7 @@ import AcademyDetailPage from '../AcademyDetailPage';
 import { useAcademyDetails, useEnterpriseCustomer } from '../../app/data';
 import { enterpriseCustomerFactory } from '../../app/data/services/data/__factories__';
 import { useAcademyPathwayData } from '../data/hooks';
+import { features } from '../../../config';
 
 // config
 const APP_CONFIG = {
@@ -119,6 +120,9 @@ jest.mock('../data/hooks', () => ({
   ...jest.requireActual('../data/hooks'),
   useAcademyPathwayData: jest.fn(),
 }));
+jest.mock('../../../config', () => ({
+  features: { FEATURE_ENABLE_ACADEMY_PATHWAYS: true },
+}));
 
 const AcademyDetailPageWrapper = () => (
   <IntlProvider locale="en">
@@ -135,7 +139,8 @@ describe('<AcademyDetailPage />', () => {
     useAcademyDetails.mockReturnValue({ data: ACADEMY_MOCK_DATA });
     useAcademyPathwayData.mockReturnValue(mockPathwayResponse);
   });
-  it('renders academy detail page', async () => {
+  it('renders academy detail page with exec courses if feature is enabled', async () => {
+    features.FEATURE_ENABLE_ACADEMY_PATHWAYS = true;
     renderWithRouter(<AcademyDetailPageWrapper />);
 
     const headingElement = await screen.getByTestId('academy-all-courses-title');
@@ -154,6 +159,23 @@ describe('<AcademyDetailPage />', () => {
     expect(screen.getAllByTestId('academy-course-card').length).toEqual(2);
     expect(screen.getByText(ALOGLIA_MOCK_DATA.hits[0].title)).toBeInTheDocument();
     expect(screen.getByText(ALOGLIA_MOCK_DATA.hits[1].title)).toBeInTheDocument();
+  });
+  it('renders academy detail page without exec courses if feature is disabled', async () => {
+    features.FEATURE_ENABLE_ACADEMY_PATHWAYS = false;
+    renderWithRouter(<AcademyDetailPageWrapper />);
+
+    const headingElement = await screen.getByTestId('academy-all-courses-title');
+    const expectedHeadingElement = `All ${ACADEMY_MOCK_DATA.title} Academy Courses`;
+    expect(headingElement.textContent).toBe(expectedHeadingElement);
+    const academyTags = screen.getAllByTestId('academy-tag').map((tag) => tag.textContent);
+    expect(academyTags).toEqual(['wowwww', 'boooo']);
+
+    expect(screen.getByTestId('academy-ocm-courses-title')).toHaveTextContent('Self-paced courses');
+    expect(screen.getByTestId('academy-ocm-courses-subtitle')).toHaveTextContent(
+      'A collection of courses that cover essential knowledge on the subject. These courses offer flexible schedules and independent study.',
+    );
+    expect(screen.getAllByTestId('academy-course-card').length).toEqual(1);
+    expect(screen.getByText(ALOGLIA_MOCK_DATA.hits[0].title)).toBeInTheDocument();
   });
   it('renders a not found page', () => {
     useAcademyDetails.mockReturnValue({ data: null });

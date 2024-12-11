@@ -3,6 +3,7 @@ import { logError } from '@edx/frontend-platform/logging';
 
 import { getAcademies, getAcademyMetadata } from './service';
 import LearnerPathwayService from '../../pathway/data/service';
+import { features } from '../../../config';
 
 export function useAcademyMetadata(academyUUID) {
   const [academyMetadata, setAcademyMetadata] = useState({});
@@ -83,7 +84,9 @@ export const useAcademyPathwayData = (academyUUID, courseIndex) => {
       }
     };
 
-    fetchPathway();
+    if (features.FEATURE_ENABLE_ACADEMY_PATHWAYS) {
+      fetchPathway();
+    }
   }, [academyUUID, courseIndex]);
 
   return [pathway, isLoading, fetchError];

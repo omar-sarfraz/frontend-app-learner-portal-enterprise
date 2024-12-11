@@ -11,6 +11,7 @@ import PropTypes from 'prop-types';
 import { LEARNING_TYPE_COURSE, LEARNING_TYPE_EXECUTIVE_EDUCATION } from '@edx/frontend-enterprise-catalog-search/data/constants';
 import SearchCourseCard from '../search/SearchCourseCard';
 import { useEnterpriseCustomer } from '../app/data';
+import { features } from '../../config';
 
 const AcademyContentCard = ({
   courseIndex, academyUUID, academyTitle, academyURL, tags,
@@ -31,15 +32,22 @@ const AcademyContentCard = ({
     () => {
       async function fetchCourses() {
         setIsAlgoliaLoading(true);
+
+        const contentTypes = ['content_type:course'];
+
+        if (features.FEATURE_ENABLE_ACADEMY_PATHWAYS) {
+          contentTypes.push('content_type:learnerpathway');
+        }
+
         const searchFacetFilters = selectedTag ? [
-          ['content_type:course', 'content_type:learnerpathway'],
+          contentTypes,
           `academy_uuids:${academyUUID}`,
-          `enterprise_customer_uuids:${enterpriseCustomer.uuid}`,
+          `enterprise_customer_uuids:${'417306cb-b24a-4d06-b83c-fb2a61d7fb96'}`,
           `academy_tags:${selectedTag}`,
         ] : [
-          ['content_type:course', 'content_type:learnerpathway'],
+          contentTypes,
           `academy_uuids:${academyUUID}`,
-          `enterprise_customer_uuids:${enterpriseCustomer.uuid}`,
+          `enterprise_customer_uuids:${'417306cb-b24a-4d06-b83c-fb2a61d7fb96'}`,
         ];
         const { hits, nbHits } = await courseIndex.search('', {
           facetFilters: searchFacetFilters,
@@ -118,8 +126,9 @@ const AcademyContentCard = ({
     additionalClass,
     titleTestId,
     subtitleTestId,
+    shouldRender = true,
   }) => {
-    if (contentLength <= 0) {
+    if (contentLength <= 0 || !shouldRender) {
       return null;
     }
 
@@ -216,6 +225,7 @@ const AcademyContentCard = ({
               additionalClass: 'academy-exec-ed-courses-container',
               titleTestId: 'academy-exec-ed-courses-title',
               subtitleTestId: 'academy-exec-ed-courses-subtitle',
+              shouldRender: features.FEATURE_ENABLE_ACADEMY_PATHWAYS,
             })}
             {renderableContent({
               content: visibleOcmCourses,

@@ -57,6 +57,10 @@ jest.mock('../../../pathway/data/service', () => jest.fn().mockImplementation(()
   }),
 })));
 
+jest.mock('../../../../config', () => ({
+  features: { FEATURE_ENABLE_ACADEMY_PATHWAYS: true },
+}));
+
 describe('useAcademyMetadata', () => {
   it('returns academy metadata', async () => {
     getAcademyMetadata.mockReturnValue(ACADEMY_MOCK_DATA);
