@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connectStateResults } from 'react-instantsearch-dom';
@@ -19,6 +19,7 @@ import {
   PROGRAM_TITLE,
   CARDGRID_COLUMN_SIZES,
 } from './constants';
+import { SEARCH_INDEX_IDS } from '../../constants';
 import { getContentTypeFromTitle, getNoOfResultsFromTitle, getSkeletonCardFromTitle } from '../utils/search';
 import BetaBadge from '../microlearning/BetaBadge';
 
@@ -34,6 +35,8 @@ const SearchResults = ({
   translatedTitle,
   isPathwaySearchResults,
   showBetaBadge,
+  componentId,
+  showVideosBanner,
 }) => {
   const { refinements, dispatch } = useContext(SearchContext);
   const nbHits = useNbHitsFromSearchResults(searchResults);
@@ -102,7 +105,7 @@ const SearchResults = ({
       //  Theses changes are temporary and will be removed once the BetaBadge component is removed from
       // the SearchResults component
       return (
-        <div className="d-flex align-items-center" id={showBetaBadge ? 'videos-section' : 'some-other-section'}>
+        <div className="d-flex align-items-center" id={componentId}>
           {translatedTitle || title} ({nbHits} {resultsLabel}) {showBetaBadge && <BetaBadge />}
           {query && <>{' '}for &quot;{query}&quot;</>}
         </div>
@@ -111,6 +114,12 @@ const SearchResults = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [nbHits, query, title],
   );
+
+  useEffect(() => {
+    if (nbHits > 0 && componentId === SEARCH_INDEX_IDS.VIDEOS) {
+      showVideosBanner();
+    }
+  }, [nbHits, componentId, showVideosBanner]);
 
   const SkeletonCard = getSkeletonCardFromTitle(title);
 
@@ -202,6 +211,8 @@ SearchResults.propTypes = {
   translatedTitle: PropTypes.string,
   isPathwaySearchResults: PropTypes.bool,
   showBetaBadge: PropTypes.bool,
+  componentId: PropTypes.string.isRequired,
+  showVideosBanner: PropTypes.func,
 };
 
 SearchResults.defaultProps = {
@@ -213,6 +224,7 @@ SearchResults.defaultProps = {
   translatedTitle: undefined,
   isPathwaySearchResults: false,
   showBetaBadge: false,
+  showVideosBanner: () => {},
 };
 
 export default connectStateResults(SearchResults);
